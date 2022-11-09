@@ -87,41 +87,37 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
     // Собираем файл css
 
     fs.truncate(path.join(__dirname, "project-dist", "style.css"), (err) => {
-        if (err) throw err;
-      });
-  
-      fs.readdir(
-        path.join(__dirname, "styles"),
-        { withFileTypes: true },
-        (err, files) => {
-          if (err) console.log(err);
-          else {
-            files.forEach((file) => {
-              if (path.extname(String(file.name)) === ".css") {
-                let input = fs.createReadStream(
-                  path.join(__dirname, "styles", `${file.name}`)
+      if (err) throw err;
+    });
+
+    fs.readdir(
+      path.join(__dirname, "styles"),
+      { withFileTypes: true },
+      (err, files) => {
+        if (err) console.log(err);
+        else {
+          files.forEach((file) => {
+            if (path.extname(String(file.name)) === ".css") {
+              let input = fs.createReadStream(
+                path.join(__dirname, "styles", `${file.name}`)
+              );
+
+              input.on("data", (data) => {
+                fs.appendFile(
+                  path.join(__dirname, "project-dist", "style.css"),
+                  `${data}`,
+                  (err) => {
+                    if (err) throw err;
+                  }
                 );
-  
-                input.on("data", (data) => {
-                  fs.appendFile(
-                    path.join(__dirname, "project-dist", "style.css"),
-                    `${data}`,
-                    (err) => {
-                      if (err) throw err;
-                    }
-                  );
-                });
-              }
-            });
-          }
+              });
+            }
+          });
         }
-      );
+      }
+    );
 
     // Копируем папку assets
-
-    
-
-
   } else if (err.code === "ENOENT") {
     fs.mkdir(
       path.join(__dirname, "project-dist"),
@@ -202,42 +198,100 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
     // Собираем файл css
 
     fs.writeFile(
-        path.join(__dirname, "project-dist", "style.css"),
-        "",
-        (err) => {
-          if (err) throw err;
-        }
-      );
-  
-      fs.readdir(
-        path.join(__dirname, "styles"),
-        { withFileTypes: true },
-        (err, files) => {
-          if (err) console.log(err);
-          else {
-            files.forEach((file) => {
-              if (path.extname(String(file.name)) === ".css") {
-                let input = fs.createReadStream(
-                  path.join(__dirname, "styles", `${file.name}`)
+      path.join(__dirname, "project-dist", "style.css"),
+      "",
+      (err) => {
+        if (err) throw err;
+      }
+    );
+
+    fs.readdir(
+      path.join(__dirname, "styles"),
+      { withFileTypes: true },
+      (err, files) => {
+        if (err) console.log(err);
+        else {
+          files.forEach((file) => {
+            if (path.extname(String(file.name)) === ".css") {
+              let input = fs.createReadStream(
+                path.join(__dirname, "styles", `${file.name}`)
+              );
+
+              input.on("data", (data) => {
+                fs.appendFile(
+                  path.join(__dirname, "project-dist", "style.css"),
+                  `${data}`,
+                  (err) => {
+                    if (err) throw err;
+                  }
                 );
-  
-                input.on("data", (data) => {
-                  fs.appendFile(
-                    path.join(__dirname, "project-dist", "style.css"),
-                    `${data}`,
-                    (err) => {
-                      if (err) throw err;
-                    }
-                  );
-                });
-              }
-            });
-          }
+              });
+            }
+          });
         }
-      );
+      }
+    );
 
-      // Копируем папку assets
+    // Копируем папку assets
 
+    fs.mkdir(
+      path.join(__dirname, "project-dist", "assets"),
+      { recursive: true },
+      (err) => {
+        if (err) throw err;
+      }
+    );
 
+    fs.readdir(path.join(__dirname, "assets"), (err, files) => {
+      if (err) console.log(err);
+
+      for (let file of files) {
+        fs.stat(
+          path.join(__dirname, "assets", `${file}`),
+          function (err, stats) {
+            if (err) throw err;
+            if (stats.isFile()) {
+              const input = fs.createReadStream(
+                path.join(__dirname, "assets", `${file}`)
+              );
+              const output = fs.createWriteStream(
+                path.join(__dirname, "project-dist", "assets", `${file}`)
+              );
+              input.pipe(output);
+            } else {
+              fs.mkdir(
+                path.join(__dirname, "project-dist", "assets", `${file}`),
+                { recursive: true },
+                (err) => {
+                  if (err) throw err;
+                }
+              );
+
+              fs.readdir(
+                path.join(__dirname, "assets", `${file}`),
+                (err, files) => {
+                  if (err) console.log(err);
+                  files.forEach((innerFile) => {
+                    const input = fs.createReadStream(
+                      path.join(__dirname, "assets", `${file}`, `${innerFile}`)
+                    );
+                    const output = fs.createWriteStream(
+                      path.join(
+                        __dirname,
+                        "project-dist",
+                        "assets",
+                        `${file}`,
+                        `${innerFile}`
+                      )
+                    );
+                    input.pipe(output);
+                  });
+                }
+              );
+            }
+          }
+        );
+      }
+    });
   }
 });
