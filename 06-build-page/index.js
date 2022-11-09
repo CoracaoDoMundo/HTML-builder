@@ -84,7 +84,44 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
       );
     });
 
-    // Дальнейшие действия
+    // Собираем файл css
+
+    fs.truncate(path.join(__dirname, "project-dist", "style.css"), (err) => {
+        if (err) throw err;
+      });
+  
+      fs.readdir(
+        path.join(__dirname, "styles"),
+        { withFileTypes: true },
+        (err, files) => {
+          if (err) console.log(err);
+          else {
+            files.forEach((file) => {
+              if (path.extname(String(file.name)) === ".css") {
+                let input = fs.createReadStream(
+                  path.join(__dirname, "styles", `${file.name}`)
+                );
+  
+                input.on("data", (data) => {
+                  fs.appendFile(
+                    path.join(__dirname, "project-dist", "style.css"),
+                    `${data}`,
+                    (err) => {
+                      if (err) throw err;
+                    }
+                  );
+                });
+              }
+            });
+          }
+        }
+      );
+
+    // Копируем папку assets
+
+    
+
+
   } else if (err.code === "ENOENT") {
     fs.mkdir(
       path.join(__dirname, "project-dist"),
@@ -162,6 +199,45 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
       );
     });
 
-    // Дальнейшие действия
+    // Собираем файл css
+
+    fs.writeFile(
+        path.join(__dirname, "project-dist", "style.css"),
+        "",
+        (err) => {
+          if (err) throw err;
+        }
+      );
+  
+      fs.readdir(
+        path.join(__dirname, "styles"),
+        { withFileTypes: true },
+        (err, files) => {
+          if (err) console.log(err);
+          else {
+            files.forEach((file) => {
+              if (path.extname(String(file.name)) === ".css") {
+                let input = fs.createReadStream(
+                  path.join(__dirname, "styles", `${file.name}`)
+                );
+  
+                input.on("data", (data) => {
+                  fs.appendFile(
+                    path.join(__dirname, "project-dist", "style.css"),
+                    `${data}`,
+                    (err) => {
+                      if (err) throw err;
+                    }
+                  );
+                });
+              }
+            });
+          }
+        }
+      );
+
+      // Копируем папку assets
+
+
   }
 });
