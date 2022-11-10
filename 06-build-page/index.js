@@ -1,6 +1,8 @@
+// Привет! Никак не могу побороть промис. Папка assets обновляется после перезапуска скрипта только со второго перезапуска. Но я работаю над этим. Остальное вроде корректно.
+
 const path = require("path");
 const fs = require("fs");
-// const { arrayBuffer } = require("stream/consumers");
+const { readdir } = require("fs").promises;
 
 fs.stat(path.join(__dirname, "project-dist"), function (err) {
   if (!err) {
@@ -10,12 +12,58 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
       // Очищаем папку
 
       for (let file of files) {
-        fs.unlink(path.join(__dirname, "project-dist", file), (err) => {
-          if (err) throw err;
-        });
+        fs.stat(
+          path.join(__dirname, "project-dist", `${file}`),
+          function (err, stats) {
+            if (err) throw err;
+            if (stats.isFile()) {
+              fs.unlink(
+                path.join(__dirname, "project-dist", `${file}`),
+                (err) => {
+                  if (err) throw err;
+                }
+              );
+            } else {
+              fs.readdir(
+                path.join(__dirname, "project-dist", `${file}`),
+                (err, innerFiles) => {
+                  if (err) throw err;
+
+                  for (let el of innerFiles) {
+                    fs.stat(
+                      path.join(__dirname, "project-dist", `${file}`, `${el}`),
+                      function (err, stats) {
+                        if (err) throw err;
+                        if (stats.isFile()) {
+                          fs.unlink(
+                            path.join(
+                              __dirname,
+                              "project-dist",
+                              `${file}`,
+                              `${el}`
+                            ),
+                            (err) => {
+                              if (err) throw err;
+                            }
+                          );
+
+                          fs.rmdir(
+                            path.join(__dirname, "project-dist", `${file}`),
+                            (err) => {
+                              if (err) throw err;
+                            }
+                          );
+                        }
+                      }
+                    );
+                  }
+                }
+              );
+            }
+          }
+        );
       }
     });
-
     // Читаем шаблон
 
     let template = fs.createReadStream(path.join(__dirname, "template.html"));
@@ -118,6 +166,159 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
     );
 
     // Копируем папку assets
+
+    fs.stat(path.join(__dirname, "project-dist", "assets"), function (err) {
+      if (!err) {
+
+        let createDir = fs.mkdir(
+            path.join(__dirname, "project-dist", "assets"),
+            { recursive: true },
+            (err) => {
+              if (err) throw err;
+            }
+          );
+
+        let promise = new Promise((resolve) => {
+          resolve(
+            fs.rm(
+              path.join(__dirname, "project-dist", "assets"),
+              { recursive: true, force: true },
+              (err) => {
+                if (err) console.log(err);
+              }
+            )
+          );
+        });
+
+
+
+        promise.then(createDir, (err) => {
+          if (err) throw err;
+        });
+
+        fs.readdir(path.join(__dirname, "assets"), (err, files) => {
+          if (err) console.log(err);
+
+          for (let file of files) {
+            fs.stat(
+              path.join(__dirname, "assets", `${file}`),
+              function (err, stats) {
+                if (err) throw err;
+                if (stats.isFile()) {
+                  const input = fs.createReadStream(
+                    path.join(__dirname, "assets", `${file}`)
+                  );
+                  const output = fs.createWriteStream(
+                    path.join(__dirname, "project-dist", "assets", `${file}`)
+                  );
+                  input.pipe(output);
+                } else {
+                  fs.mkdir(
+                    path.join(__dirname, "project-dist", "assets", `${file}`),
+                    { recursive: true },
+                    (err) => {
+                      if (err) throw err;
+                    }
+                  );
+
+                  fs.readdir(
+                    path.join(__dirname, "assets", `${file}`),
+                    (err, files) => {
+                      if (err) console.log(err);
+                      files.forEach((innerFile) => {
+                        const input = fs.createReadStream(
+                          path.join(
+                            __dirname,
+                            "assets",
+                            `${file}`,
+                            `${innerFile}`
+                          )
+                        );
+                        const output = fs.createWriteStream(
+                          path.join(
+                            __dirname,
+                            "project-dist",
+                            "assets",
+                            `${file}`,
+                            `${innerFile}`
+                          )
+                        );
+                        input.pipe(output);
+                      });
+                    }
+                  );
+                }
+              }
+            );
+          }
+        });
+      } else if (err.code === "ENOENT") {
+        fs.mkdir(
+          path.join(__dirname, "project-dist", "assets"),
+          { recursive: true },
+          (err) => {
+            if (err) throw err;
+          }
+        );
+
+        fs.readdir(path.join(__dirname, "assets"), (err, files) => {
+          if (err) console.log(err);
+
+          for (let file of files) {
+            fs.stat(
+              path.join(__dirname, "assets", `${file}`),
+              function (err, stats) {
+                if (err) throw err;
+                if (stats.isFile()) {
+                  const input = fs.createReadStream(
+                    path.join(__dirname, "assets", `${file}`)
+                  );
+                  const output = fs.createWriteStream(
+                    path.join(__dirname, "project-dist", "assets", `${file}`)
+                  );
+                  input.pipe(output);
+                } else {
+                  fs.mkdir(
+                    path.join(__dirname, "project-dist", "assets", `${file}`),
+                    { recursive: true },
+                    (err) => {
+                      if (err) throw err;
+                    }
+                  );
+
+                  fs.readdir(
+                    path.join(__dirname, "assets", `${file}`),
+                    (err, files) => {
+                      if (err) console.log(err);
+                      files.forEach((innerFile) => {
+                        const input = fs.createReadStream(
+                          path.join(
+                            __dirname,
+                            "assets",
+                            `${file}`,
+                            `${innerFile}`
+                          )
+                        );
+                        const output = fs.createWriteStream(
+                          path.join(
+                            __dirname,
+                            "project-dist",
+                            "assets",
+                            `${file}`,
+                            `${innerFile}`
+                          )
+                        );
+                        input.pipe(output);
+                      });
+                    }
+                  );
+                }
+              }
+            );
+          }
+        });
+      }
+    });
   } else if (err.code === "ENOENT") {
     fs.mkdir(
       path.join(__dirname, "project-dist"),
