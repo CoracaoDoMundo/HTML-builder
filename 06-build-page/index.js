@@ -169,30 +169,33 @@ fs.stat(path.join(__dirname, "project-dist"), function (err) {
 
     fs.stat(path.join(__dirname, "project-dist", "assets"), function (err) {
       if (!err) {
-
         let createDir = fs.mkdir(
-            path.join(__dirname, "project-dist", "assets"),
-            { recursive: true },
-            (err) => {
-              if (err) throw err;
+          path.join(__dirname, "project-dist", "assets"),
+          { recursive: true },
+          (err) => {
+            if (err) throw err;
+          }
+        );
+
+        let del = fs.rm(
+          path.join(__dirname, "project-dist", "assets"),
+          { recursive: true, force: true },
+          (err) => {
+            if (err) console.log(err);
+          }
+        );
+
+        //   console.log(typeof createDir);
+        function deleteProm() {
+          let promise = new Promise((resolve) => {
+            if (del === 'true') {
+              resolve("Deleted!");
             }
-          );
+          });
+          return promise;
+        }
 
-        let promise = new Promise((resolve) => {
-          resolve(
-            fs.rm(
-              path.join(__dirname, "project-dist", "assets"),
-              { recursive: true, force: true },
-              (err) => {
-                if (err) console.log(err);
-              }
-            )
-          );
-        });
-
-
-
-        promise.then(createDir, (err) => {
+        deleteProm().then(createDir, (err) => {
           if (err) throw err;
         });
 
