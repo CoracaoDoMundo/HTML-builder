@@ -2,8 +2,12 @@ const path = require("path");
 const fs = require("fs");
 
 fs.stat(path.join(__dirname, "files-copy"), function (err) {
+
+  const sourcePath = path.join(__dirname, "files");
+  const finalPath = path.join(__dirname, "files-copy");
+
   if (!err) {
-    fs.readdir(path.join(__dirname, "files-copy"), (err, files) => {
+    fs.readdir(finalPath, (err, files) => {
       if (err) throw err;
 
       for (let file of files) {
@@ -13,7 +17,7 @@ fs.stat(path.join(__dirname, "files-copy"), function (err) {
       }
     });
 
-    fs.readdir(path.join(__dirname, "files"), (err, files) => {
+    fs.readdir(sourcePath, (err, files) => {
       if (err) console.log(err);
       else {
         files.forEach((file) => {
@@ -28,11 +32,11 @@ fs.stat(path.join(__dirname, "files-copy"), function (err) {
       }
     });
   } else if (err.code === "ENOENT") {
-    fs.mkdir(path.join(__dirname, "files-copy"), { recursive: true }, (err) => {
+    fs.mkdir(finalPath, { recursive: true }, (err) => {
       if (err) throw err;
     });
 
-    fs.readdir(path.join(__dirname, "files"), (err, files) => {
+    fs.readdir(sourcePath, (err, files) => {
       if (err) console.log(err);
       else {
         files.forEach((file) => {
